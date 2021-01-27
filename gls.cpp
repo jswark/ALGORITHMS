@@ -3,46 +3,82 @@
 #include <vector>
 const double lambda = 10;
 
-void printSol(const std::vector<long> &solution, long n, const std::vector<std::vector<long long>> &matrix){
-  for (long i = 0; i < n; ++i)
-    std::cout << solution[i] << " ";
+long cost(const std::vector<long> &path, long n,
+          std::vector<std::vector<long long>> matrix) {
+  double result = 0;
+
+  for (size_t i = 0; i < n - 1; i++)
+    result += matrix[path[i]][path[i + 1]];
+
+  result += matrix[path[n]][path[0]];
+
+  return result;
 }
 
-std::vector<long> randsolution(long n) {
-  std::vector<long> solution(n);
-
-  for (long i = 0; i < n; i++) {
-    solution[i] = i;
+std::vector<long> randSol(int n, std::vector<long> &solution) {
+  std::vector<long> mask (n + 1);
+  for (int i = 0; i <= n; i++) {
+    mask.push_back(0);
   }
 
+  long randCity = rand()%n;
+  for (int i = 0; i < n; i++) {
+    while (mask[randCity] != 0)
+      randCity = rand()%n;
+    solution[i] = randCity;
+    mask[randCity] = 1; //used
+  }
+
+  solution[n] = solution[0];
+
   return solution;
+}
+
+void printSol(const std::vector<long> &solution, long n) {
+  for (long i = 0; i <= n; ++i)
+    std::cout << solution[i] << " ";
+  std::cout << std::endl;
+}
+
+std::vector<long> two_opt(std::vector<long> vect, const int i,
+                          const int j) {
+
+  std::vector<long> newVect;
+  newVect.insert(newVect.end(), vect.begin(), vect.begin() + i);
+
+  std::vector<long> middlePart(vect.begin() + i, vect.begin() + j);
+  std::reverse(middlePart.begin(), middlePart.end());
+
+  newVect.insert(newVect.end(), middlePart.begin(), middlePart.end());
+  newVect.insert(newVect.end(), vect.begin() + j, vect.end());
+
+  return newVect;
 }
 
 std::vector<std::vector<long>> getNeighbors(int n,
                                             const std::vector<long> &solution) {
   std::vector<std::vector<long>> result;
 
-  for (size_t i = 0; i < n; i++) {
-    for (size_t j = 0; j < n; j++) {
-      if (i != j) {
-        auto tmp = solution;
-        std::swap(tmp[i], tmp[j]);
-        result.push_back(tmp);
-      }
+  int i = 0;
+  for (size_t j = 0; j <= n; j++) {
+    if (i == 0) {
+      std::vector<long> tmp = solution;
+      tmp = two_opt(tmp, i, n);
+      result.push_back(tmp);
+      i++;
+    }
+    else if (j == (n - 1)) {
+      std::vector<long> tmp = solution;
+      tmp = two_opt(tmp, 0, j);
+      result.push_back(tmp);
+    }
+
+    else {
+      std::vector<long> tmp = solution;
+      tmp = two_opt(tmp, i, j);
+      result.push_back(tmp);
     }
   }
-
-  return result;
-}
-
-double getLenght(const std::vector<long> &path, long n,
-                 std::vector<std::vector<long long>> matrix) {
-  double result = 0;
-
-  for (size_t i = 0; i < n - 1; i++)
-    result += matrix[path[i]][path[i + 1]];
-
-  result += matrix[path[n - 1]][path[0]];
 
   return result;
 }
@@ -53,7 +89,7 @@ double getPenalty(const std::vector<long> &path, long n, int **penalty) {
   for (size_t i = 0; i < n - 1; i++)
     result += penalty[path[i]][path[i + 1]];
 
-  result += penalty[path[n - 1]][path[0]];
+  result += penalty[path[n]][path[0]];
 
   return result * lambda;
 }
@@ -61,35 +97,35 @@ double getPenalty(const std::vector<long> &path, long n, int **penalty) {
 std::vector<long> LS(int **penalty, long n,
                      const std::vector<std::vector<long long>> &matrix) {
   bool isThereBetter = true;
-
-  int m_iterations = 0;
+  int maxCost = 10000000;
   int record = 10000000;
-  std::vector<long> solution = randsolution(n);
+  std::vector<long> solution (n + 1);
+  solution = randSol(n, solution);
 
   while (isThereBetter) {
-    m_iterations++;
     auto neighbors = getNeighbors(n, solution);
 
     isThereBetter = false;
     for (size_t i = 0; i < neighbors.size(); i++) {
-      int lenght = 10000000;
-      if ((lenght = getLenght(neighbors[i], n, matrix) +
-          getPenalty(neighbors[i], n, penalty)) < record) {
-        record = lenght;
+      if ((maxCost = cost(neighbors[i], n, matrix) /*+
+                    getPenalty(neighbors[i], n, penalty)*/) < record) {
+        record = maxCost;
         solution = neighbors[i];
         isThereBetter = true;
-        std::cout << "New record: " << record << std::endl;
+        //TODO giveFine
         break;
       }
     }
   }
+
   return solution;
 }
 
 std::vector<long> gls(long n,
                       const std::vector<std::vector<long long>> &matrix) {
-  int k = 0;
-  std::vector<long> solution = randsolution(n);
+
+  std::vector<long> solution (n + 1);
+  solution = randSol(n, solution);
 
   int **penaltysMatrix = new int *[n];
   for (int i = 0; i < n; i++) {
@@ -99,8 +135,13 @@ std::vector<long> gls(long n,
     for (int j = 0; j < n; ++j) {
       penaltysMatrix[i][j] = 0;
     }
-  int iter = 10, i = 0;
 
+  solution = LS(penaltysMatrix, n, matrix);
+  printSol(solution, n);
+  solution = LS(penaltysMatrix, n, matrix);
+  printSol(solution, n);
+  solution = LS(penaltysMatrix, n, matrix);
+  printSol(solution, n);
   solution = LS(penaltysMatrix, n, matrix);
   return solution;
 }
@@ -145,7 +186,8 @@ int main() {
   }
 
   std::vector<long> solution = gls(n, matrix);
-  for (int i = 0; i < n; ++i)
+
+  for (int i = 0; i <= n; ++i)
     std::cout << solution[i] << " ";
   return 0;
 }
