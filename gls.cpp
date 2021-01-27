@@ -1,7 +1,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
-const double lambda = 10;
+const int lambda = 10;
 
 long cost(const std::vector<long> &path, long n,
           std::vector<std::vector<long long>> matrix) {
@@ -15,7 +15,7 @@ long cost(const std::vector<long> &path, long n,
   return result;
 }
 
-std::vector<long> randSol(int n, std::vector<long> &solution) {
+std::vector<long> randSol(long n, std::vector<long> &solution) {
   std::vector<long> mask (n + 1);
   for (int i = 0; i <= n; i++) {
     mask.push_back(0);
@@ -40,8 +40,8 @@ void printSol(const std::vector<long> &solution, long n) {
   std::cout << std::endl;
 }
 
-std::vector<long> two_opt(std::vector<long> vect, const int i,
-                          const int j) {
+std::vector<long> two_opt(std::vector<long> vect, const long i,
+                          const long j) {
 
   std::vector<long> newVect;
   newVect.insert(newVect.end(), vect.begin(), vect.begin() + i);
@@ -55,7 +55,7 @@ std::vector<long> two_opt(std::vector<long> vect, const int i,
   return newVect;
 }
 
-std::vector<std::vector<long>> shuffle(int n,
+std::vector<std::vector<long>> shuffle(long n,
                                             const std::vector<long> &solution) {
   std::vector<std::vector<long>> result;
 
@@ -83,34 +83,34 @@ std::vector<std::vector<long>> shuffle(int n,
   return result;
 }
 
-long getPenalty(const std::vector<long> &path, long n, int **penalty) {
-  double result = 0;
+long getPenalty(const std::vector<long> &path, long n, const std::vector<std::vector<long long>> &fine) {
+  long result = 0;
 
   for (size_t i = 0; i < n - 1; i++)
-    result += penalty[path[i]][path[i + 1]];
+    result += fine[path[i]][path[i + 1]];
 
-  result += penalty[path[n]][path[0]];
+  result += fine[path[n]][path[0]];
 
   return result * lambda;
 }
 
-std::vector<long> LS(int **penalty, long n,
+std::vector<long> LS(const std::vector<std::vector<long long>> &fine, long n,
                      const std::vector<std::vector<long long>> &matrix) {
   bool isThereBetter = true;
-  int maxCost = 10000000;
-  int record = 10000000;
+  long maxCost = 10000000;
+  long record = 10000000;
   std::vector<long> solution (n + 1);
   solution = randSol(n, solution);
 
   while (isThereBetter) {
-    auto neighbors = shuffle(n, solution);
+    auto new_sol = shuffle(n, solution);
 
     isThereBetter = false;
-    for (size_t i = 0; i < neighbors.size(); i++) {
-      if ((maxCost = cost(neighbors[i], n, matrix) /*+
-                    getPenalty(neighbors[i], n, penalty)*/) < record) {
+    for (size_t i = 0; i < new_sol.size(); i++) {
+      if ((maxCost = cost(new_sol[i], n, matrix) /*+
+                    getPenalty(neighbors[i], n, fine)*/) < record) {
         record = maxCost;
-        solution = neighbors[i];
+        solution = new_sol[i];
         isThereBetter = true;
         //TODO giveFine
         break;
@@ -127,22 +127,25 @@ std::vector<long> gls(long n,
   std::vector<long> solution (n + 1);
   solution = randSol(n, solution);
 
-  int **penaltysMatrix = new int *[n];
-  for (int i = 0; i < n; i++) {
-    penaltysMatrix[i] = new int[n];
-  }
-  for (int i = 0; i < n; i++)
+  std::vector<std::vector<long long>> fine(n);
+  for (int i = 0; i <= n; ++i) {
+    fine.push_back(std::vector<long long>());
     for (int j = 0; j < n; ++j) {
-      penaltysMatrix[i][j] = 0;
+      if (i == j) {
+        fine[i].push_back(0);
+      } else {
+        fine[i].push_back(0);
+      }
     }
-
-  solution = LS(penaltysMatrix, n, matrix);
+  }
+  
+  solution = LS(fine, n, matrix);
   printSol(solution, n);
-  solution = LS(penaltysMatrix, n, matrix);
+  solution = LS(fine, n, matrix);
   printSol(solution, n);
-  solution = LS(penaltysMatrix, n, matrix);
+  solution = LS(fine, n, matrix);
   printSol(solution, n);
-  solution = LS(penaltysMatrix, n, matrix);
+  solution = LS(fine, n, matrix);
   return solution;
 }
 
