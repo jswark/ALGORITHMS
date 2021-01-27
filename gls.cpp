@@ -5,7 +5,7 @@ const double lambda = 10;
 
 long cost(const std::vector<long> &path, long n,
           std::vector<std::vector<long long>> matrix) {
-  double result = 0;
+  long result = 0;
 
   for (size_t i = 0; i < n - 1; i++)
     result += matrix[path[i]][path[i + 1]];
@@ -55,7 +55,7 @@ std::vector<long> two_opt(std::vector<long> vect, const int i,
   return newVect;
 }
 
-std::vector<std::vector<long>> getNeighbors(int n,
+std::vector<std::vector<long>> shuffle(int n,
                                             const std::vector<long> &solution) {
   std::vector<std::vector<long>> result;
 
@@ -83,7 +83,7 @@ std::vector<std::vector<long>> getNeighbors(int n,
   return result;
 }
 
-double getPenalty(const std::vector<long> &path, long n, int **penalty) {
+long getPenalty(const std::vector<long> &path, long n, int **penalty) {
   double result = 0;
 
   for (size_t i = 0; i < n - 1; i++)
@@ -103,7 +103,7 @@ std::vector<long> LS(int **penalty, long n,
   solution = randSol(n, solution);
 
   while (isThereBetter) {
-    auto neighbors = getNeighbors(n, solution);
+    auto neighbors = shuffle(n, solution);
 
     isThereBetter = false;
     for (size_t i = 0; i < neighbors.size(); i++) {
