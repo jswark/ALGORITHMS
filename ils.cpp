@@ -4,7 +4,23 @@
 #include <algorithm>
 #include <map>
 using namespace std;
+std::vector<int> two_opt(std::vector<int> vect) {
+  vector<int> copy = vect;
+  long i = rand()%vect.size();
+  long j=rand()%vect.size();
+  if (i > j)
+    std::swap(i, j);
+  std::vector<int> newVect;
+  newVect.insert(newVect.end(), vect.begin(), vect.begin() + i);
 
+  std::vector<int> middlePart(vect.begin() + i, vect.begin() + j);
+  std::reverse(middlePart.begin(), middlePart.end());
+
+  newVect.insert(newVect.end(), middlePart.begin(), middlePart.end());
+  newVect.insert(newVect.end(), vect.begin() + j, vect.end());
+
+  return newVect;
+}
 long long costCount(vector<int> solution,vector<vector<long long>> matrix){
   long long sum = 0;
   for (int i = 0;i<solution.size()-1;i++){
@@ -30,6 +46,42 @@ vector<int> randomSearch(vector<vector<long long>> matrix){
   return solution;
 }
 
+vector<int> Greedy(vector<vector<long long>> matrix){
+  // generate node list
+  vector<int> mask={};
+  for (int i=1;i<=matrix.size();i++){
+    mask.push_back(0);
+  }
+
+  int startid = rand()%mask.size();
+  int n = mask.size();
+  int k = 1;
+  vector <int> solution={};
+
+  solution.push_back(startid+1);
+  mask[startid] = 1;
+
+  int curid = startid;
+  int min = 100000000000;
+  int next = 0;
+
+  while (k < matrix.size()) {
+    for (int i = 0; i < n; i++) {
+      if (matrix[curid][i] < min && mask[i] == 0) {
+        min = matrix[curid][i];
+        next = i;
+      }
+    }
+    solution.push_back(next+1);
+    min = 100000000000;
+    mask[next] = 1;
+    curid = next;
+    k++;
+  }
+
+  return solution;
+}
+
 vector<int> localSearch(vector<int> solution,vector<vector<long long>> matrix){  // 2-opt algorithm
   int n = solution.size();
   vector<int> newsolution(n);
@@ -38,14 +90,15 @@ vector<int> localSearch(vector<int> solution,vector<vector<long long>> matrix){ 
   int flag = 0;
   long long bestdistance=costCount(newsolution,matrix);
   int k=0;
-  while (flag == 0 && k<10) { // repeat until we can change something
+  while (flag == 0 && k<5) { // repeat until we can change something
     flag = 1;
     k++;
   int i = rand()%n;
   int j = rand()%n;
   currentsolution = newsolution;
         if(i!=j) {
-          swap(currentsolution[i], currentsolution[j]);
+          two_opt(currentsolution);
+          //swap(currentsolution[i], currentsolution[j]);
           float currentdistance = costCount(currentsolution, matrix);
           if (currentdistance < bestdistance) {
             newsolution = currentsolution;
@@ -124,6 +177,7 @@ int main(){
 //  input data
   long x = 0, y = 0, id = 0, n = 0;
   map<long, pair<long, long>> my_map;
+  std::srand(time(0));
 
   freopen("../mona_1000.txt", "r", stdin);
   scanf("%ld", &n);
@@ -143,7 +197,8 @@ int main(){
   }
 
 // generate initial solution
-  vector<int>solution=randomSearch(matrix);
+  vector<int>solution=Greedy(matrix);
+  cout << endl;
   long solution_cost = costCount(solution,matrix);
   cout<<solution_cost<<endl;
 // local search from initial
@@ -155,10 +210,10 @@ int main(){
     solution2 = solution;
   }
   int i = 0;
-  while (i<10000){
+  while (i<10){
     i++;
     // perturbation
-    vector<int> newsolution = perturbation(solution2);
+    vector<int> newsolution = two_opt(solution2);
     vector<int> newsolution2 = localSearch(newsolution,matrix);
     cout<<costCount(newsolution2,matrix)<<endl;
     // acceptance criteria
