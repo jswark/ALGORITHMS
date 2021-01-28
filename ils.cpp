@@ -2,10 +2,11 @@
 #include <vector>
 #include <random>
 #include <algorithm>
+#include <map>
 using namespace std;
 
-float costCount(vector<int> solution,vector<vector<float>> matrix){
-  float sum = 0;
+long long costCount(vector<int> solution,vector<vector<long long>> matrix){
+  long long sum = 0;
   for (int i = 0;i<solution.size()-1;i++){
     sum+=matrix[solution[i]-1][solution[i+1]-1];
   }
@@ -13,9 +14,12 @@ float costCount(vector<int> solution,vector<vector<float>> matrix){
   return sum;
 }
 
-vector<int> randomSearch(vector<vector<float>> matrix){
+vector<int> randomSearch(vector<vector<long long>> matrix){
   // generate node list
-  vector<int> nodes={1,2,3,4,5,6,7,8};
+  vector<int> nodes={};
+  for (int i=1;i<=matrix.size();i++){
+    nodes.push_back(i);
+  }
   int n = nodes.size();
   vector <int> solution={};
   for (int i=0;i<n;i++){
@@ -35,10 +39,10 @@ int allused(vector<int>used,vector<int>ans) {
   return 1;
 }
 
-int greedyRecursive(int v,vector<vector<float>>matrix,float &cost,vector<int>&ans,int n,vector<int>&used){
+int greedyRecursive(int v,vector<vector<long long>>matrix,long long &cost,vector<int>&ans,int n,vector<int>&used){
   used[v]++;
   ans.push_back(v);
-  float min = -1;
+  long long min = -1;
   int nv=-1;
   int j = 1;
   for (int i = 0; i < n && j; i++) {
@@ -73,9 +77,9 @@ int greedyRecursive(int v,vector<vector<float>>matrix,float &cost,vector<int>&an
   return 1;
 }
 
-vector<int> greedySearch(vector<vector<float>> matrix){
+vector<int> greedySearch(vector<vector<long long>> matrix){
   int n = matrix.size();
-  float cost = 0, res = -1;
+  long long cost = 0, res = -1;
   vector<int>ans;
   vector<int>itog(n+1);
   for (int i = 0; i < n; i++) {
@@ -100,13 +104,13 @@ vector<int> greedySearch(vector<vector<float>> matrix){
   return itog;
 }
 
-vector<int> localSearch(vector<int> solution,vector<vector<float>> matrix){  // 2-opt algorithm
+vector<int> localSearch(vector<int> solution,vector<vector<long long>> matrix){  // 2-opt algorithm
   int n = solution.size();
   vector<int> newsolution(n);
   vector<int> currentsolution(n);
   newsolution=solution;
   int flag = 0;
-  float bestdistance=costCount(newsolution,matrix);
+  long long bestdistance=costCount(newsolution,matrix);
   while (flag == 0) { // repeat until we can change something
     flag = 1;
     start:
@@ -138,17 +142,17 @@ int vectorContanes(vector<int>index, int elem){
 
 vector<int> perturbation(vector<int> solution){  // 4-opt double bridge algorithm
   vector<int>copy = solution;
-  vector<int>newsolution(solution.size());  // size at least 8
+  vector<int>newsolution=solution;  // size at least 8
   vector<int>index;
   for(int i=0;i<4;i++){
     int pos = rand()%copy.size();
-    while(copy[pos] == copy[copy.size()-1] || vectorContanes(index,copy[pos]) || vectorContanes(index,copy[pos+1])){
+    while(pos == copy.size()-1 || vectorContanes(index,pos) || vectorContanes(index,pos+1)){
       pos = rand()%copy.size();
     }
-    index.push_back(copy[pos]);
-    index.push_back(copy[pos+1]);
-    copy.erase(copy.begin() + 1+pos);
-    copy.erase(copy.begin() + pos);
+    index.push_back(pos);
+    index.push_back(pos+1);
+//    copy.erase(copy.begin() + 1+pos);
+//    copy.erase(copy.begin() + pos);
   }
   // sort!
   sort(index.begin(),index.end());
@@ -188,21 +192,48 @@ vector<int> perturbation(vector<int> solution){  // 4-opt double bridge algorith
   return newsolution;
 }
 
+long get_dist(pair<long, long> city1, pair<long, long> city2) {
+  long dx = pow((long)(city1.first - city2.first), 2);
+  long dy = pow((long)(city1.second - city2.second), 2);
+  return (floor((long)(sqrt(dx + dy))));
+}
+
 int main(){
 //  input data
-  int n = 8;
-  vector<vector<float>> matrix = {{0.0, 3.0, 4.0, 2.0, 7.0, 1.1, 11.2, 3.0},
-                                  {3.0, 0.0, 4.0, 6.0, 3.0, 3.3, 4.5, 1.0},
-                                  {4.0, 4.0, 0.0, 5.0, 8.0, 5.6, 5.0, 1.1},
-                                  {2.0, 6.0, 5.0, 0.0, 6.0, 6.0, 1.1, 1.0},
-                                  {7.0, 3.0, 8.0, 6.0, 0.0, 5.5, 5.0, 5.0},
-                                  {1.1, 3.3, 5.6, 6.0, 5.5, 0.0, 2.2, 2.2},
-                                  {11.2, 4.5, 5.0, 1.1, 5.0, 2.2, 0.0, 0.5},
-                                  {3.0, 1.0, 1.1, 1.0, 5.0, 2.2, 0.5, 0.0}};
+  long x = 0, y = 0, id = 0, n = 0;
+  map<long, pair<long, long>> my_map;
 
+  freopen("../data.txt", "r", stdin);
+  scanf("%ld", &n);
+  for (auto i = 0; i < n; i++) {
+    scanf("%ld %ld %ld", &id, &x, &y);
+    my_map[id] = std::make_pair(x, y);
+  }
+
+  // std::pair<long, long> p = my_map[3];
+  // std::cout << p.first << ' ' << p.second;
+
+  vector<vector<long long>> matrix(n);
+  for (int i = 0; i <= n; ++i) {
+    matrix.push_back(vector<long long>());
+    for (int j = 0; j < n; ++j) {
+      if (i == j) {
+        matrix[i].push_back(0);
+      } else {
+        matrix[i].push_back(get_dist(my_map[i], my_map[j]));
+      }
+    }
+  }
+
+  for (int i = 0; i < n; ++i) {
+    for (int j = 0; j < n; ++j) {
+      cout << matrix[i][j] << " ";
+    }
+    cout << endl;
+  }
 // generate initial solution
-  vector<int>solution=greedySearch(matrix); // or randomSearch()
-  float solution_cost = costCount(solution,matrix);
+  vector<int>solution=randomSearch(matrix); // or randomSearch()
+  long solution_cost = costCount(solution,matrix);
   cout<<solution_cost<<endl;
 // local search from initial
   vector<int> solution2 = localSearch(solution,matrix);
@@ -215,7 +246,7 @@ int main(){
     solution2 = solution;
   }
   int i = 0;
-  while (i<20){
+  while (i<10){
     i++;
     // perturbation
     vector<int> newsolution = perturbation(solution2);
@@ -230,6 +261,7 @@ int main(){
   for (int i=0;i<solution2.size();i++){
     cout<<solution2[i]<<' ';
   }
+  cout << endl;
   solution_cost = costCount(solution2,matrix);
   cout<<solution_cost<<endl;
 }
