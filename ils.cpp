@@ -179,21 +179,29 @@ int main(){
   map<long, pair<long, long>> my_map;
   std::srand(time(0));
 
-  freopen("../mona_1000.txt", "r", stdin);
+  freopen("../data.txt", "r", stdin);
   scanf("%ld", &n);
   for (auto i = 0; i < n; i++) {
     scanf("%ld %ld %ld", &id, &x, &y);
     my_map[id] = make_pair(x, y);
   }
   vector<vector<long long>> matrix (n,vector<long long>(n,0));
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1; j <= n; j++) {
       if (i == j) {
-        matrix[i][j]=0;
+        matrix[i-1][j-1]=0;
       } else {
-        matrix[i][j]=get_dist(my_map[i], my_map[j]);
+        matrix[i-1][j-1]=get_dist(my_map[i], my_map[j]);
       }
     }
+  }
+
+
+  for (int i=0;i<matrix.size();i++){
+    for (int j=0;j<matrix.size();j++) {
+      cout << matrix[i][j] << ' ';
+    }
+    cout<<endl;
   }
 
 // generate initial solution
@@ -210,7 +218,7 @@ int main(){
     solution2 = solution;
   }
   int i = 0;
-  while (i<10){
+  while (i<10000){
     i++;
     // perturbation
     vector<int> newsolution = two_opt(solution2);
