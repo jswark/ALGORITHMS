@@ -4,6 +4,16 @@
 #include <algorithm>
 #include <map>
 using namespace std;
+
+double costCount(vector<int> solution, vector<vector<double>> matrix){
+  double sum = 0;
+  for (int i = 0;i<solution.size()-1;i++){
+    sum+=matrix[solution[i]-1][solution[i+1]-1];
+  }
+  sum+=matrix[solution.back()-1][solution.front()-1];
+  return sum;
+}
+
 std::vector<int> two_opt(std::vector<int> vect) {
   vector<int> copy = vect;
   long i = rand()%vect.size();
@@ -21,16 +31,9 @@ std::vector<int> two_opt(std::vector<int> vect) {
 
   return newVect;
 }
-long long costCount(vector<int> solution,vector<vector<long long>> matrix){
-  long long sum = 0;
-  for (int i = 0;i<solution.size()-1;i++){
-    sum+=matrix[solution[i]-1][solution[i+1]-1];
-  }
-  sum+=matrix[solution.back()-1][solution.front()-1];
-  return sum;
-}
 
-vector<int> randomSearch(vector<vector<long long>> matrix){
+
+vector<int> randomSearch(vector<vector<double>> matrix){
   // generate node list
   vector<int> nodes={};
   for (int i=1;i<=matrix.size();i++){
@@ -46,7 +49,23 @@ vector<int> randomSearch(vector<vector<long long>> matrix){
   return solution;
 }
 
-vector<int> Greedy(vector<vector<long long>> matrix){
+int getMin(int i, vector<vector<double>> matrix){
+  int k = 0;
+  int curid = i;
+  int min = matrix[curid][1];
+  int minid = 1;
+
+    for (int i = 0; i < matrix.size(); i++) {
+      if (matrix[curid][i] < min && i != curid) {
+        min = matrix[curid][i];
+        minid = i;
+      }
+    }
+
+  return minid;
+}
+
+vector<int> Greedy(vector<vector<double>> matrix){
   // generate node list
   vector<int> mask={};
   for (int i=1;i<=matrix.size();i++){
@@ -82,27 +101,29 @@ vector<int> Greedy(vector<vector<long long>> matrix){
   return solution;
 }
 
-vector<int> localSearch(vector<int> solution,vector<vector<long long>> matrix){  // 2-opt algorithm
+vector<int> localSearch(vector<int> solution,vector<vector<double>> matrix){  // 2-opt algorithm
   int n = solution.size();
   vector<int> newsolution(n);
   vector<int> currentsolution(n);
   newsolution=solution;
-  int flag = 0;
-  long long bestdistance=costCount(newsolution,matrix);
+  int flag = 1;
+  double bestdistance=costCount(newsolution,matrix);
   int k=0;
-  while (flag == 0 && k<5) { // repeat until we can change something
+  double currentdistance = 0;
+  while (flag == 1) { // repeat until we can change something
     flag = 1;
     k++;
   int i = rand()%n;
-  int j = rand()%n;
+  int j = getMin(i, matrix);
   currentsolution = newsolution;
         if(i!=j) {
-          two_opt(currentsolution);
+          currentsolution = two_opt(currentsolution);
           //swap(currentsolution[i], currentsolution[j]);
-          float currentdistance = costCount(currentsolution, matrix);
+          currentdistance = costCount(currentsolution, matrix);
           if (currentdistance < bestdistance) {
             newsolution = currentsolution;
             bestdistance = currentdistance;
+            std::cout<<"better " << bestdistance << endl;
             flag = 0;
           }}}
   return newsolution;
@@ -167,10 +188,10 @@ vector<int> perturbation(vector<int> solution){  // 4-opt double bridge algorith
   return newsolution;
 }
 
-long get_dist(pair<long, long> city1, pair<long, long> city2) {
-  long dx = pow((long)(city1.first - city2.first), 2);
-  long dy = pow((long)(city1.second - city2.second), 2);
-  return (floor((long)(sqrt(dx + dy))));
+double get_dist(pair<long, long> city1, pair<long, long> city2) {
+  long dx = pow((double)(city1.first - city2.first), 2);
+  long dy = pow((double)(city1.second - city2.second), 2);
+  return (round((double)((sqrt(dx + dy))*100)))/100;
 }
 
 int main(){
@@ -179,13 +200,13 @@ int main(){
   map<long, pair<long, long>> my_map;
   std::srand(time(0));
 
-  freopen("../data.txt", "r", stdin);
+  freopen("../random_1.txt", "r", stdin);
   scanf("%ld", &n);
   for (auto i = 0; i < n; i++) {
     scanf("%ld %ld %ld", &id, &x, &y);
     my_map[id] = make_pair(x, y);
   }
-  vector<vector<long long>> matrix (n,vector<long long>(n,0));
+  vector<vector<double>> matrix (n, vector<double>(n,0));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= n; j++) {
       if (i == j) {
@@ -206,36 +227,57 @@ int main(){
 
 // generate initial solution
   vector<int>solution=Greedy(matrix);
+  double solc = costCount(solution,matrix);
+  while(solc > 518971) { //это минимум для моны из гриди, лучше начинать сразу на нем
+    cout<<solc<<endl;
+    cout<<solution[0]<<endl;
+    solution = Greedy(matrix);
+   solc = costCount(solution,matrix);
+  }
+  cout<<solution[0];
+
   cout << endl;
-  long solution_cost = costCount(solution,matrix);
-  cout<<solution_cost<<endl;
+  double solution_cost = costCount(solution,matrix);
+  cout<< "init cost " <<solution_cost<<endl;
 // local search from initial
   vector<int> solution2 = localSearch(solution,matrix);
 
   solution_cost = costCount(solution2,matrix);
-  cout<<solution_cost<<endl;
+  cout<< "after 1 ls " << solution_cost<<endl;
   if(costCount(solution,matrix)<costCount(solution2,matrix)){
     solution2 = solution;
   }
+  vector<int> newsolution = two_opt(solution2);
+  solution_cost = costCount(newsolution,matrix);
+  cout<< "after 1 opt " << solution_cost<<endl;
+  if(costCount(newsolution,matrix)<costCount(solution2,matrix)){
+    solution2 = newsolution;
+  }
   int i = 0;
-  while (i<10000){
+
+  while (i<10){
     i++;
     // perturbation
-    vector<int> newsolution = two_opt(solution2);
-    vector<int> newsolution2 = localSearch(newsolution,matrix);
-    cout<<costCount(newsolution2,matrix)<<endl;
+    //vector<int> newsolution = perturbation(solution2);
+    //cout<<costCount(newsolution, matrix)<<endl;
+    vector<int> newsolution2 = localSearch(solution2,matrix); //делаем лс на хорошем решении и улучшаем его
+    //cout<<costCount(newsolution2,matrix)<<endl;
     // acceptance criteria
     if (costCount(solution2,matrix)>costCount(newsolution2,matrix)){
       solution2 = newsolution2;
+      cout<<costCount(newsolution2,matrix)<<endl;
     }
+    //newsolution = two_opt(solution2); место для вашего 4-опт
+    //newsolution = two_opt(solution2);
   }
+
   cout << "Answer:"<<endl;
-  for (int i=0;i<solution2.size();i++){
+  for (int i=0;i<newsolution.size();i++){
     cout<<solution2[i]<<' ';
   }
   cout << endl;
   solution_cost = costCount(solution2,matrix);
   cout<<solution_cost<<endl;
-  cout<<solution.size()<<endl;
+  cout<<solution2.size()<<endl;
 
 }
