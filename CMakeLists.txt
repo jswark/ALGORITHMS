@@ -3,4 +3,4 @@ project(ALGORITHMS)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(ALGORITHMS ils.cpp)
+add_executable(ALGORITHMS iterLS.cpp main.cpp)
