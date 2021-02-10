@@ -6,7 +6,10 @@
 
 using namespace std;
 int n_ones;
+int m;
+int p;
 double bestGE;
+
 //  GE-index
 double GE_index(const vector<int> &machines, const vector<int> &details,
                 const vector<vector<int>> &matrix) {
@@ -28,6 +31,10 @@ double GE_index(const vector<int> &machines, const vector<int> &details,
   return res;
 }
 //  shaking
+vector<int> divide();
+vector<int> merge();
+vector<int> shake();
+
 //  exploration of neighborhood
 vector<int> move_cols(vector<int> &details, vector<int> &machines,
                       vector<vector<int>> &matrix, int clusters) {
@@ -53,6 +60,7 @@ vector<int> move_cols(vector<int> &details, vector<int> &machines,
 
   return details;
 }
+
 bool all_clusters(vector<int> check, int clusters) {
   vector<int> cl(clusters);
   for (int i = 1; i <= clusters; i++)
@@ -155,15 +163,13 @@ vector<int> rand_sol(vector<int> &for_rand, int clusters) {
   return filled;
 }
 
-int main() {
-  std::srand(time(0));
-  //  (1) parsing
+std::vector<std::vector<int>> loadData() {
   ifstream in;                 // поток для записи
   in.open("../test_king.txt"); // окрываем файл для записи
-  int m = 0;
-  int p = 0;
+  m = 0;
+  p = 0;
   if (!in.is_open()) {
-    return -1;
+    cout << "cant open file";
   }
   in >> m >> p;
   vector<vector<int>> matrix(m, vector<int>(p, 0));
@@ -183,6 +189,7 @@ int main() {
     numbers.clear();
   }
   in.close();
+
   for (auto &i : matrix) {
     for (int j : i) {
       cout << j << ' ';
@@ -198,52 +205,6 @@ int main() {
     }
   }
   int n_zeros = m * p - n_ones;
-  bestGE = 0;
 
-  //  (2) generate initial solution
-  int clusters = 2;
-  vector<int> machines(m);
-  vector<int> details(p);
-  machines = rand_sol(machines, clusters);
-  details = rand_sol(details, clusters);
-  // machines = {2,1, 1, 2, 1};
-  // details = {1, 2, 1, 1, 2, 1, 1};
-  bestGE = GE_index(machines, details, matrix);
-  cout << endl
-       << "init GE: " << GE_index(machines, details, matrix) << endl
-       << "init machines " << endl;
-  for (int i = 0; i < m; i++) {
-    cout << machines[i] << ' ';
-  }
-  cout << endl << "init details " << endl;
-  for (int i = 0; i < p; i++) {
-    cout << details[i] << ' ';
-  }
-  cout << endl;
-
-  //  (3) general vns
-
-  machines = LS(machines, details, matrix, clusters);
-
- /* int counter = 0;
-  int k = 0;
-  while (counter < 2) {
-    counter++;
-    k = 1;
-    //    while(k!=k_max)
-  }*/
-
-  //  (4) print answer
- /* cout << "Answer:" << endl;
-  for (int i = 0; i < m; i++) {
-    cout << machines[i] << ' ';
-  }
-  cout << endl;
-  for (int i = 0; i < p; i++) {
-    cout << details[i] << ' ';
-  }
-  cout << endl;
-  cout << GE_index(machines, details, matrix) << endl;
-
-  cout << endl;*/
+  return matrix;
 }

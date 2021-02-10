@@ -3,4 +3,4 @@ project(ALGORITHMS)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(ALGORITHMS vns.cpp)
+add_executable(ALGORITHMS main.cpp)
