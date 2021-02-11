@@ -30,7 +30,7 @@ int main() {
   //  (3) general vns
   vector<int> new_machines(m);
   new_machines = LS(machines, details, matrix, clusters);
-  //место для вашего шейка
+  shaking(details, machines, clusters);
 
   /* int counter = 0;
    int k = 0;
