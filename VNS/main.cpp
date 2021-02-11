@@ -7,7 +7,7 @@ int main() {
   bestGE = 0;
 
   //  (2) generate initial solution
-  int clusters = 2;
+  int clusters = 3;
   vector<int> machines(m);
   vector<int> details(p);
   machines = rand_sol(machines, clusters);
@@ -28,9 +28,28 @@ int main() {
   cout << endl;
 
   //  (3) general vns
-  vector<int> new_machines(m);
-  new_machines = LS(machines, details, matrix, clusters);
-  shaking(details, machines, clusters);
+  vector<int> best_machines = machines;
+  vector<int> best_details = details;
+  double cur_best = GE_index(best_machines, best_details, matrix);
+  double new_best = 0;
+  int counter = 0;
+  while (counter < 20) {
+    LS(machines, details, matrix, clusters);
+    new_best = GE_index(machines, details, matrix);
+    if (new_best > cur_best) {
+      cur_best = new_best;
+      best_machines = machines;
+      best_details = details;
+    }
+    else {
+      machines = best_machines;
+      details = best_details;
+      //clusters--;
+    }
+
+    shaking(details, machines, clusters);
+    counter++;
+  }
 
   /* int counter = 0;
    int k = 0;
@@ -41,16 +60,16 @@ int main() {
    }*/
 
   //  (4) print answer
-  /* cout << "Answer:" << endl;
+  cout << "Answer:" << endl;
    for (int i = 0; i < m; i++) {
-     cout << machines[i] << ' ';
+     cout << best_machines[i] << ' ';
    }
    cout << endl;
    for (int i = 0; i < p; i++) {
-     cout << details[i] << ' ';
+     cout << best_details[i] << ' ';
    }
    cout << endl;
-   cout << GE_index(machines, details, matrix) << endl;
+   cout << GE_index(best_machines, best_details, matrix) << endl;
 
-   cout << endl;*/
+   cout << endl;
 }
