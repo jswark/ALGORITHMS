@@ -3,6 +3,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <ctime>
+#include <random>
 
 using namespace std;
 int n_ones;
@@ -31,9 +33,25 @@ double GE_index(const vector<int> &machines, const vector<int> &details,
   return res;
 }
 //  shaking
-vector<int> divide();
-vector<int> merge();
-vector<int> shake();
+void shaking(vector<int> &details, vector<int> &machines, int &clusters){
+  int det = rand()%details.size();
+  int mach = rand()%machines.size();
+  int cl = rand()%(clusters+1)+1;
+  if(cl == clusters+1){
+    clusters++;
+  }
+  details[det]=cl;
+  machines[mach]=cl;
+  cout<<"After shake:"<<endl;
+  for (int i = 0; i < machines.size(); i++) {
+    cout << machines[i] << ' ';
+  }
+  cout << endl;
+  for (int i = 0; i < details.size(); i++) {
+    cout << details[i] << ' ';
+  }
+  cout << endl;
+}
 
 //  exploration of neighborhood
 vector<int> move_cols(vector<int> &details, vector<int> &machines,
@@ -92,7 +110,7 @@ vector<int> move_rows(vector<int> &machines, vector<int> &details,
         machines_new[i] = j;
 
         GE = GE_index(machines_new, details, matrix);
-        if (GE > bestGE and all_clusters(machines_new, clusters)) {
+        if (GE > bestGE && all_clusters(machines_new, clusters)) {
           bestGE = GE;
           return machines_new;
         } else
