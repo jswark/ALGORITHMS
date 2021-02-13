@@ -50,28 +50,106 @@ double GE_index(const vector<int> &machines, const vector<int> &details,
   return res;
 }
 //  shaking
-void shaking(vector<int> details, vector<int> machines, int &clusters){
-  clusters++;
+int count_clusters(vector<int> details, vector<int> machines){
+  int clusters = 0;
+  bool flag = true;
+  while(flag){
+    flag = false;
+    clusters++;
+    for(auto m:machines){
+      if(m == clusters){
+        flag = true;
 
-  int tmp_det = 0;
-  int tmp_mach = 0;
-
-  while (!all_clusters(details, clusters) || !all_clusters(machines, clusters)) {
-    int det = rand()%details.size();
-    int mach = rand()%machines.size();
-
-    tmp_det = details[det];
-    tmp_mach = machines[mach];
-
-    details[det]=clusters;
-    machines[mach]=clusters;
-
-    if (!all_clusters(details, clusters) || !all_clusters(machines, clusters)) {
-      details[det] = tmp_det;
-      machines[mach] = tmp_mach;
+      }
     }
   }
-  cout<<"After shake:"<<endl;
+  clusters --;
+  return clusters;
+}
+
+int valid_clusters(vector<int>machines,vector<int>details, vector<vector<int>> matrix, int clusters){
+  bool correct;
+  int c=0;
+  while(c<clusters){
+    correct=false;
+    c++;
+    for(int i=0;i<machines.size();i++){
+      for(int j=0;j<details.size();j++){
+        if(machines[i]==c && details[j]==c && matrix[i][j]==1){
+          correct = true;
+        }
+      }
+    }
+    if(correct== false){
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int split(vector<int> &details, vector<int> &machines, vector<vector<int>> matrix){
+  vector<int>copy_m=machines;
+  vector<int>copy_d=details;
+  int clusters = count_clusters(details,machines);
+  int cl = rand()%clusters+1;
+  int cl_size_m = 0;
+  for(auto m:machines){
+    if(m == cl){
+      cl_size_m++;
+    }
+  }
+  if((cl_size_m == 1 && clusters == 1) || (machines.size()==clusters)){
+    return -1;
+  }
+  while(cl_size_m<=1){
+    cl = rand()%clusters+1;
+    cl_size_m = 0;
+    for(auto m:machines){
+      if(m == cl){
+        cl_size_m++;
+      }
+    }
+  }
+  int cl_size_d = 0;
+  for(auto d:details){
+    if(d == cl){
+      cl_size_d++;
+    }
+  }
+  if(cl_size_d <= 1){
+    machines=copy_m;
+    details=copy_d;
+    return -1;
+  }
+  if((cl_size_d == 1 && clusters == 1) || (details.size()==clusters)){
+    machines=copy_m;
+    details=copy_d;
+    return -1;
+  }
+  clusters++;
+  int split_size_m = rand()%(cl_size_m-1)+1;
+  for(int i=0;i<split_size_m;i++){
+    int pos = rand()%machines.size();
+    while (machines[pos] != cl){
+      pos = rand()%machines.size();
+    }
+    machines[pos]=clusters;
+  }
+
+  int split_size_d = rand()%(cl_size_d-1)+1;
+  for(int i=0;i<split_size_d;i++){
+    int pos = rand()%details.size();
+    while (details[pos] != cl){
+      pos = rand()%details.size();
+    }
+    details[pos]=clusters;
+  }
+  if(!valid_clusters(machines,details,matrix,clusters)){
+    machines=copy_m;
+    details=copy_d;
+    return -1;
+  }
+  cout<<"After split:"<<endl;
   for (int i = 0; i < machines.size(); i++) {
     cout << machines[i] << ' ';
   }
@@ -80,6 +158,55 @@ void shaking(vector<int> details, vector<int> machines, int &clusters){
     cout << details[i] << ' ';
   }
   cout << endl;
+  return 0;
+}
+
+int merge(vector<int> &details, vector<int> &machines, vector<vector<int>>matrix){
+  vector<int>copy_m=machines;
+  vector<int>copy_d=details;
+  int clusters = count_clusters(details,machines);
+  if(clusters==1){
+    machines=copy_m;
+    details=copy_d;
+    return -1;
+  }
+  int cl1 = rand()%clusters+1;
+  int cl2 = rand()%clusters+1;
+  while(cl1==cl2){
+    cl2 = rand()%clusters+1;
+  }
+  if(cl1>cl2){
+    swap(cl1,cl2);
+  }
+  for(int i=0;i<machines.size();i++){
+    if(machines[i]==cl2){
+      machines[i]=cl1;
+    }else if(machines[i]>cl2){
+      machines[i]--;
+    }
+  }
+  for(int i=0;i<details.size();i++){
+    if(details[i]==cl2){
+      details[i]=cl1;
+    }else if(details[i]>cl2){
+      details[i]--;
+    }
+  }
+  if(!valid_clusters(machines,details,matrix,clusters)){
+    machines=copy_m;
+    details=copy_d;
+    return -1;
+  }
+  cout<<"After merge:"<<endl;
+  for (int i = 0; i < machines.size(); i++) {
+    cout << machines[i] << ' ';
+  }
+  cout << endl;
+  for (int i = 0; i < details.size(); i++) {
+    cout << details[i] << ' ';
+  }
+  cout << endl;
+  return 0;
 }
 
 //  exploration of neighborhood
@@ -134,7 +261,7 @@ vector<int> move_rows(vector<int> &machines, vector<int> &details,
 }
 
 void LS(vector<int> &machines, vector<int> &details,
-        vector<vector<int>> &matrix, int &clusters) {
+               vector<vector<int>> &matrix, int &clusters) {
   vector<int> machines_new = machines;
   vector<int> details_new = details;
   double cur_GE = bestGE;
@@ -146,7 +273,7 @@ void LS(vector<int> &machines, vector<int> &details,
     while (better_rows) {
       better_rows = false;
       machines_new = move_rows(machines_new, details_new, matrix, clusters);
-      // details_new = move_cols(details_new, machines_new, matrix, clusters);
+     // details_new = move_cols(details_new, machines_new, matrix, clusters);
       if (cur_GE < bestGE) {
         cur_GE = bestGE;
         better_rows = true;
@@ -171,13 +298,13 @@ void LS(vector<int> &machines, vector<int> &details,
   if (all_clusters(machines_new, clusters) && all_clusters(details_new, clusters)) {
     machines = machines_new;
     details = details_new;
-  }
+    }
   else {
-    clusters--;
-  }
+      clusters--;
+    }
 
 
-  cout << "Answer: ______________________" << endl;
+  cout << "LS Answer: ______________________" << endl;
   for (int i = 0; i < machines_new.size(); i++) {
     cout << machines[i] << ' ';
   }
@@ -187,7 +314,7 @@ void LS(vector<int> &machines, vector<int> &details,
   }
   cout << endl;
   cout << GE_index(machines, details, matrix) << endl;
-  cout << "Answer: ______________________" << endl;
+  cout << "_________________________________" << endl;
 }
 
 vector<int> rand_sol(vector<int> &for_rand, int clusters) {
@@ -202,7 +329,7 @@ vector<int> rand_sol(vector<int> &for_rand, int clusters) {
 
 std::vector<std::vector<int>> loadData() {
   ifstream in;                 // поток для записи
-  in.open("../corm37.txt"); // окрываем файл для записи
+  in.open("../VNS/contest/zolf50.txt"); // окрываем файл для записи
   m = 0;
   p = 0;
   if (!in.is_open()) {
