@@ -1,10 +1,10 @@
+#include <ctime>
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <ctime>
-#include <random>
 
 using namespace std;
 int n_ones;
@@ -50,28 +50,53 @@ double GE_index(const vector<int> &machines, const vector<int> &details,
   return res;
 }
 //  shaking
-void shaking(vector<int> details, vector<int> machines, int &clusters){
+void shaking(vector<int> details, vector<int> machines, int &clusters,
+             vector<vector<int>> &matrix) {
   clusters++;
 
   int tmp_det = 0;
   int tmp_mach = 0;
+  int tmp_det2 = 0;
+  int tmp_mach2 = 0;
 
-  while (!all_clusters(details, clusters) || !all_clusters(machines, clusters)) {
-    int det = rand()%details.size();
-    int mach = rand()%machines.size();
+  while (!all_clusters(details, clusters) ||
+         !all_clusters(machines, clusters)) {
+
+    int det = rand() % details.size();
+    int mach = rand() % machines.size();
+    while (matrix[det][mach] != 1) {
+      det = rand() % details.size();
+      mach = rand() % machines.size();
+    }
+
+    int det2 = rand() % details.size();
+    int mach2 = rand() % machines.size();
+    while (matrix[det2][mach2] != 1) {
+      det2 = rand() % details.size();
+      mach2 = rand() % machines.size();
+    }
 
     tmp_det = details[det];
     tmp_mach = machines[mach];
 
-    details[det]=clusters;
-    machines[mach]=clusters;
+    tmp_det2 = details[det2];
+    tmp_mach2 = machines[mach2];
+
+    details[det] = clusters;
+    machines[mach] = clusters;
+
+    details[det2] = clusters;
+    machines[mach2] = clusters;
 
     if (!all_clusters(details, clusters) || !all_clusters(machines, clusters)) {
       details[det] = tmp_det;
       machines[mach] = tmp_mach;
+
+      details[det2] = tmp_det2;
+      machines[mach2] = tmp_mach2;
     }
   }
-  cout<<"After shake:"<<endl;
+  cout << "After shake:" << endl;
   for (int i = 0; i < machines.size(); i++) {
     cout << machines[i] << ' ';
   }
@@ -86,6 +111,7 @@ void shaking(vector<int> details, vector<int> machines, int &clusters){
 vector<int> move_cols(vector<int> &details, vector<int> &machines,
                       vector<vector<int>> &matrix, int clusters) {
   vector<int> details_new = details;
+  vector<int> best_move = details;
   double GE = bestGE;
   int tmp_cl = 0;
 
@@ -96,21 +122,29 @@ vector<int> move_cols(vector<int> &details, vector<int> &machines,
         details_new[i] = j;
 
         GE = GE_index(machines, details_new, matrix);
-        if (GE >= bestGE && all_clusters(details_new, clusters)) {
-          bestGE = GE;
-          return details_new;
+        if (GE >= GE_index(machines, best_move, matrix) &&
+            all_clusters(details_new, clusters)) {
+          // bestGE = GE;
+          best_move = details_new;
+          details_new[i] = tmp_cl;
+          // return details_new;
         } else
           details_new[i] = tmp_cl;
       }
     }
   }
 
-  return details;
+  if (bestGE < GE_index(machines, best_move, matrix)) {
+    bestGE = GE_index(machines, best_move, matrix);
+  }
+
+  return best_move;
 }
 
 vector<int> move_rows(vector<int> &machines, vector<int> &details,
                       vector<vector<int>> &matrix, int clusters) {
   vector<int> machines_new = machines;
+  vector<int> best_move = machines;
   double GE = bestGE;
   int tmp_cl = 0;
 
@@ -121,20 +155,26 @@ vector<int> move_rows(vector<int> &machines, vector<int> &details,
         machines_new[i] = j;
 
         GE = GE_index(machines_new, details, matrix);
-        if (GE > bestGE && all_clusters(machines_new, clusters)) {
-          bestGE = GE;
-          return machines_new;
+        if (GE >= GE_index(best_move, details, matrix) &&
+            all_clusters(machines_new, clusters)) {
+          best_move = machines_new;
+          machines_new[i] = tmp_cl;
+          // return machines_new;
         } else
           machines_new[i] = tmp_cl;
       }
     }
   }
 
-  return machines;
+  if (bestGE < GE_index(best_move, details, matrix)) {
+    bestGE = GE_index(best_move, details, matrix);
+  }
+
+  return best_move;
 }
 
 void LS(vector<int> &machines, vector<int> &details,
-               vector<vector<int>> &matrix, int &clusters) {
+        vector<vector<int>> &matrix, int &clusters) {
   vector<int> machines_new = machines;
   vector<int> details_new = details;
   double cur_GE = bestGE;
@@ -146,7 +186,7 @@ void LS(vector<int> &machines, vector<int> &details,
     while (better_rows) {
       better_rows = false;
       machines_new = move_rows(machines_new, details_new, matrix, clusters);
-     // details_new = move_cols(details_new, machines_new, matrix, clusters);
+      // details_new = move_cols(details_new, machines_new, matrix, clusters);
       if (cur_GE < bestGE) {
         cur_GE = bestGE;
         better_rows = true;
@@ -156,7 +196,6 @@ void LS(vector<int> &machines, vector<int> &details,
     }
 
     while (better_cols) {
-
       better_cols = false;
       details_new = move_cols(details_new, machines_new, matrix, clusters);
       if (cur_GE < bestGE) {
@@ -168,14 +207,13 @@ void LS(vector<int> &machines, vector<int> &details,
     }
   }
 
-  if (all_clusters(machines_new, clusters) && all_clusters(details_new, clusters)) {
+  if (all_clusters(machines_new, clusters) &&
+      all_clusters(details_new, clusters)) {
     machines = machines_new;
     details = details_new;
-    }
-  else {
-      clusters--;
-    }
-
+  } else {
+    clusters--;
+  }
 
   cout << "Answer: ______________________" << endl;
   for (int i = 0; i < machines_new.size(); i++) {
@@ -201,8 +239,8 @@ vector<int> rand_sol(vector<int> &for_rand, int clusters) {
 }
 
 std::vector<std::vector<int>> loadData() {
-  ifstream in;                 // поток для записи
-  in.open("../corm37.txt"); // окрываем файл для записи
+  ifstream in;                // поток для записи
+  in.open("../carrie28.txt"); // окрываем файл для записи
   m = 0;
   p = 0;
   if (!in.is_open()) {

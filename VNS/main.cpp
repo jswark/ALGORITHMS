@@ -7,7 +7,7 @@ int main() {
   bestGE = 0;
 
   //  (2) generate initial solution
-  int clusters = 3;
+  int clusters = 8;
   vector<int> machines(m);
   vector<int> details(p);
   machines = rand_sol(machines, clusters);
@@ -33,7 +33,9 @@ int main() {
   double cur_best = GE_index(best_machines, best_details, matrix);
   double new_best = 0;
   int counter = 0;
-  while (counter < 20) {
+  vector<int> tmp_machines = machines;
+  vector<int> tmp_details = details;
+  while (counter < 10) {
     LS(machines, details, matrix, clusters);
     new_best = GE_index(machines, details, matrix);
     if (new_best > cur_best) {
