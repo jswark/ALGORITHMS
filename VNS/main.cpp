@@ -1,20 +1,20 @@
 #include "load_data.h"
 #include "ls.h"
 #include "shaking.h"
-#include <iostream>
 #include <ctime>
+#include <iostream>
 #include <vector>
 
-using namespace  std;
+using namespace std;
 
 int main() {
   std::srand(time(0));
   //  (1) parsing
   int m = 0;
-  int p =0;
-  int n_ones=0;
+  int p = 0;
+  int n_ones = 0;
   double bestGE = 0;
-  vector<vector<int>> matrix = loadData(m,p, n_ones);
+  vector<vector<int>> matrix = loadData(m, p, n_ones);
 
   //  (2) generate initial solution
   int clusters = 2;
@@ -84,7 +84,9 @@ int main() {
     clusters = count_clusters(tmp_details, tmp_machines);
 
     if (flagme) {
-      for (int i = 0; (i < 100) && flagme && clusters > 2; i++) {
+      for (int i = 0;
+           (i < 100) && flagme && count_clusters(tmp_details, tmp_machines) > 2;
+           i++) {
         details = tmp_details;
         machines = tmp_machines;
         merge(details, machines, matrix);

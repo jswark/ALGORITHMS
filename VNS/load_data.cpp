@@ -7,9 +7,9 @@
 
 using namespace std;
 
-std::vector<std::vector<int>> loadData(int &m, int& p, int n_ones) {
-  ifstream in;             // поток для записи
-  in.open("../VNS/contest/chan7.txt"); // окрываем файл для записи
+std::vector<std::vector<int>> loadData(int &m, int &p, int &n_ones) {
+  ifstream in;                        // поток для записи
+  in.open("../contest/carrie28.txt"); // окрываем файл для записи
   m = 0;
   p = 0;
   if (!in.is_open()) {

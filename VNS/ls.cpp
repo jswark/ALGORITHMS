@@ -27,7 +27,8 @@ bool all_clusters(vector<int> check, int clusters) {
 }
 
 vector<int> move_cols(vector<int> &details, vector<int> &machines,
-                      vector<vector<int>> &matrix, int clusters, int n_ones, double bestGE) {
+                      vector<vector<int>> &matrix, int clusters, int n_ones,
+                      double bestGE) {
   vector<int> details_new = details;
   vector<int> best_move = details;
   double GE = bestGE;
@@ -58,7 +59,8 @@ vector<int> move_cols(vector<int> &details, vector<int> &machines,
 }
 
 vector<int> move_rows(vector<int> &machines, vector<int> &details,
-                      vector<vector<int>> &matrix, int clusters, int n_ones, double  bestGE) {
+                      vector<vector<int>> &matrix, int clusters, int n_ones,
+                      double bestGE) {
   vector<int> machines_new = machines;
   vector<int> best_move = machines;
   double GE = bestGE;
@@ -101,7 +103,8 @@ void LS(vector<int> &machines, vector<int> &details,
     better_sol = false;
     while (better_rows) {
       better_rows = false;
-      machines_new = move_rows(machines_new, details_new, matrix, clusters, n_ones, bestGE);
+      machines_new = move_rows(machines_new, details_new, matrix, clusters,
+                               n_ones, bestGE);
       // details_new = move_cols(details_new, machines_new, matrix, clusters);
       if (cur_GE < bestGE) {
         cur_GE = bestGE;
@@ -113,7 +116,8 @@ void LS(vector<int> &machines, vector<int> &details,
 
     while (better_cols) {
       better_cols = false;
-      details_new = move_cols(details_new, machines_new, matrix, clusters, n_ones, bestGE);
+      details_new = move_cols(details_new, machines_new, matrix, clusters,
+                              n_ones, bestGE);
       if (cur_GE < bestGE) {
         cur_GE = bestGE;
         better_cols = true;
@@ -123,10 +127,8 @@ void LS(vector<int> &machines, vector<int> &details,
     }
   }
 
-
   machines = machines_new;
   details = details_new;
-
 
   cout << "LS Answer: ______________________" << endl;
   for (int i = 0; i < machines_new.size(); i++) {

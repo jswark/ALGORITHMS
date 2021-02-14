@@ -1,4 +1,3 @@
-#include "shaking.h"
 #include <ctime>
 #include <iostream>
 #include <random>
@@ -68,7 +67,7 @@ int split(vector<int> &details, vector<int> &machines,
           const vector<vector<int>>& matrix) {
   vector<int> copy_m = machines;
   vector<int> copy_d = details;
-
+start:
   int clusters = count_clusters(details, machines);
   int cl = rand() % clusters + 1;
   int cl_size_m = 0;
@@ -80,6 +79,11 @@ int split(vector<int> &details, vector<int> &machines,
   if ((cl_size_m == 1 && clusters == 1) || (machines.size() == clusters)) {
     return -1;
   } do{
+    if (details.size() == clusters) {
+      machines = copy_m;
+      details = copy_d;
+      return -1;
+    }
     machines = copy_m;
     details = copy_d;
     while (cl_size_m <= 1) {
@@ -100,12 +104,12 @@ int split(vector<int> &details, vector<int> &machines,
     if (cl_size_d <= 1) {
       machines = copy_m;
       details = copy_d;
-      return -1;
+      goto start;
     }
-    if ((cl_size_d == 1 && clusters == 1) || (details.size() == clusters)) {
+    if ((cl_size_d == 1 && clusters == 1)) {
       machines = copy_m;
       details = copy_d;
-      return -1;
+      goto start;
     }
     clusters++;
     int split_size_m = rand() % (cl_size_m - 1) + 1;
