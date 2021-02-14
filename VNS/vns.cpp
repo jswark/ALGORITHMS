@@ -66,14 +66,14 @@ void shaking(vector<int> details, vector<int> machines, int &clusters,
 
     int det = rand() % details.size();
     int mach = rand() % machines.size();
-    while (matrix[det][mach] != 1) {
+    while (matrix[mach][det] != 1) {
       det = rand() % details.size();
       mach = rand() % machines.size();
     }
 
     int det2 = rand() % details.size();
     int mach2 = rand() % machines.size();
-    while (matrix[det2][mach2] != 1) {
+    while (matrix[mach2][det2] != 1) {
       det2 = rand() % details.size();
       mach2 = rand() % machines.size();
     }

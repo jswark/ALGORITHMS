@@ -1,10 +1,10 @@
+#include <ctime>
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <ctime>
-#include <random>
 
 using namespace std;
 int n_ones;
@@ -50,106 +50,110 @@ double GE_index(const vector<int> &machines, const vector<int> &details,
   return res;
 }
 //  shaking
-int count_clusters(vector<int> details, vector<int> machines){
+int count_clusters(vector<int> details, vector<int> machines) {
   int clusters = 0;
   bool flag = true;
-  while(flag){
+  while (flag) {
     flag = false;
     clusters++;
-    for(auto m:machines){
-      if(m == clusters){
+    for (auto m : machines) {
+      if (m == clusters) {
         flag = true;
-
       }
     }
   }
-  clusters --;
+  clusters--;
   return clusters;
 }
 
-int valid_clusters(vector<int>machines,vector<int>details, vector<vector<int>> matrix, int clusters){
+int valid_clusters(vector<int> machines, vector<int> details,
+                   vector<vector<int>> matrix, int clusters) {
   bool correct;
-  int c=0;
-  while(c<clusters){
-    correct=false;
+  int c = 0;
+  while (c < clusters) {
+    correct = false;
     c++;
-    for(int i=0;i<machines.size();i++){
-      for(int j=0;j<details.size();j++){
-        if(machines[i]==c && details[j]==c && matrix[i][j]==1){
+    for (int i = 0; i < machines.size(); i++) {
+      for (int j = 0; j < details.size(); j++) {
+        if (machines[i] == c && details[j] == c && matrix[i][j] == 1) {
           correct = true;
         }
       }
     }
-    if(correct== false){
+    if (!correct) {
       return 0;
     }
   }
   return 1;
 }
 
-int split(vector<int> &details, vector<int> &machines, vector<vector<int>> matrix){
-  vector<int>copy_m=machines;
-  vector<int>copy_d=details;
-  int clusters = count_clusters(details,machines);
-  int cl = rand()%clusters+1;
+int split(vector<int> &details, vector<int> &machines,
+          const vector<vector<int>>& matrix) {
+  vector<int> copy_m = machines;
+  vector<int> copy_d = details;
+
+  int clusters = count_clusters(details, machines);
+  int cl = rand() % clusters + 1;
   int cl_size_m = 0;
-  for(auto m:machines){
-    if(m == cl){
+  for (auto ma : machines) {
+    if (ma == cl) {
       cl_size_m++;
     }
   }
-  if((cl_size_m == 1 && clusters == 1) || (machines.size()==clusters)){
+  if ((cl_size_m == 1 && clusters == 1) || (machines.size() == clusters)) {
     return -1;
-  }
-  while(cl_size_m<=1){
-    cl = rand()%clusters+1;
+  } do{
+  machines = copy_m;
+  details = copy_d;
+  while (cl_size_m <= 1) {
+    cl = rand() % clusters + 1;
     cl_size_m = 0;
-    for(auto m:machines){
-      if(m == cl){
+    for (auto ma : machines) {
+      if (ma == cl) {
         cl_size_m++;
       }
     }
   }
   int cl_size_d = 0;
-  for(auto d:details){
-    if(d == cl){
+  for (auto d : details) {
+    if (d == cl) {
       cl_size_d++;
     }
   }
-  if(cl_size_d <= 1){
-    machines=copy_m;
-    details=copy_d;
+  if (cl_size_d <= 1) {
+    machines = copy_m;
+    details = copy_d;
     return -1;
   }
-  if((cl_size_d == 1 && clusters == 1) || (details.size()==clusters)){
-    machines=copy_m;
-    details=copy_d;
+  if ((cl_size_d == 1 && clusters == 1) || (details.size() == clusters)) {
+    machines = copy_m;
+    details = copy_d;
     return -1;
   }
   clusters++;
-  int split_size_m = rand()%(cl_size_m-1)+1;
-  for(int i=0;i<split_size_m;i++){
-    int pos = rand()%machines.size();
-    while (machines[pos] != cl){
-      pos = rand()%machines.size();
+  int split_size_m = rand() % (cl_size_m - 1) + 1;
+  for (int i = 0; i < split_size_m; i++) {
+    int pos = rand() % machines.size();
+    while (machines[pos] != cl) {
+      pos = rand() % machines.size();
     }
-    machines[pos]=clusters;
+    machines[pos] = clusters;
   }
 
-  int split_size_d = rand()%(cl_size_d-1)+1;
-  for(int i=0;i<split_size_d;i++){
-    int pos = rand()%details.size();
-    while (details[pos] != cl){
-      pos = rand()%details.size();
+  int split_size_d = rand() % (cl_size_d - 1) + 1;
+  for (int i = 0; i < split_size_d; i++) {
+    int pos = rand() % details.size();
+    while (details[pos] != cl) {
+      pos = rand() % details.size();
     }
-    details[pos]=clusters;
-  }
-  if(!valid_clusters(machines,details,matrix,clusters)){
-    machines=copy_m;
-    details=copy_d;
-    return -1;
-  }
-  cout<<"After split:"<<endl;
+    details[pos] = clusters;
+  }}
+  while (!valid_clusters(machines, details, matrix, clusters)); //{
+  //  machines = copy_m;
+   // details = copy_d;
+   // return -1;
+ // }
+  cout << "After split:" << endl;
   for (int i = 0; i < machines.size(); i++) {
     cout << machines[i] << ' ';
   }
@@ -161,43 +165,51 @@ int split(vector<int> &details, vector<int> &machines, vector<vector<int>> matri
   return 0;
 }
 
-int merge(vector<int> &details, vector<int> &machines, vector<vector<int>>matrix){
-  vector<int>copy_m=machines;
-  vector<int>copy_d=details;
-  int clusters = count_clusters(details,machines);
-  if(clusters==1){
-    machines=copy_m;
-    details=copy_d;
-    return -1;
-  }
-  int cl1 = rand()%clusters+1;
-  int cl2 = rand()%clusters+1;
-  while(cl1==cl2){
-    cl2 = rand()%clusters+1;
-  }
-  if(cl1>cl2){
-    swap(cl1,cl2);
-  }
-  for(int i=0;i<machines.size();i++){
-    if(machines[i]==cl2){
-      machines[i]=cl1;
-    }else if(machines[i]>cl2){
-      machines[i]--;
+int merge(vector<int> &details, vector<int> &machines,
+          vector<vector<int>> matrix) {
+  vector<int> copy_m = machines;
+  vector<int> copy_d = details;
+  int clusters = count_clusters(details, machines);
+
+
+    machines = copy_m;
+    details = copy_d;
+    if (clusters == 1) {
+      machines = copy_m;
+      details = copy_d;
+      return -1;
+    }
+    int cl1 = rand() % clusters + 1;
+    int cl2 = rand() % clusters + 1;
+    while (cl1 == cl2) {
+      cl2 = rand() % clusters + 1;
+    }
+    if (cl1 > cl2) {
+      swap(cl1, cl2);
+    }
+
+  do {
+    for (int i = 0; i < machines.size(); i++) {
+      if (machines[i] == cl2) {
+        machines[i] = cl1;
+      } else if (machines[i] > cl2) {
+        machines[i]--;
+      }
+    }
+    for (int i = 0; i < details.size(); i++) {
+      if (details[i] == cl2) {
+        details[i] = cl1;
+      } else if (details[i] > cl2) {
+        details[i]--;
+      }
     }
   }
-  for(int i=0;i<details.size();i++){
-    if(details[i]==cl2){
-      details[i]=cl1;
-    }else if(details[i]>cl2){
-      details[i]--;
-    }
-  }
-  if(!valid_clusters(machines,details,matrix,clusters)){
-    machines=copy_m;
-    details=copy_d;
-    return -1;
-  }
-  cout<<"After merge:"<<endl;
+  while (!valid_clusters(machines, details, matrix, clusters--));
+    //machines = copy_m;
+   // details = copy_d;
+  //  return -1;
+
+  cout << "After merge:" << endl;
   for (int i = 0; i < machines.size(); i++) {
     cout << machines[i] << ' ';
   }
@@ -213,6 +225,7 @@ int merge(vector<int> &details, vector<int> &machines, vector<vector<int>>matrix
 vector<int> move_cols(vector<int> &details, vector<int> &machines,
                       vector<vector<int>> &matrix, int clusters) {
   vector<int> details_new = details;
+  vector<int> best_move = details;
   double GE = bestGE;
   int tmp_cl = 0;
 
@@ -223,21 +236,29 @@ vector<int> move_cols(vector<int> &details, vector<int> &machines,
         details_new[i] = j;
 
         GE = GE_index(machines, details_new, matrix);
-        if (GE >= bestGE && all_clusters(details_new, clusters)) {
-          bestGE = GE;
-          return details_new;
+        if (GE >= GE_index(machines, best_move, matrix) &&
+            all_clusters(details_new, clusters)) {
+          // bestGE = GE;
+          best_move = details_new;
+          details_new[i] = tmp_cl;
+          // return details_new;
         } else
           details_new[i] = tmp_cl;
       }
     }
   }
 
-  return details;
+  if (bestGE < GE_index(machines, best_move, matrix)) {
+    bestGE = GE_index(machines, best_move, matrix);
+  }
+
+  return best_move;
 }
 
 vector<int> move_rows(vector<int> &machines, vector<int> &details,
                       vector<vector<int>> &matrix, int clusters) {
   vector<int> machines_new = machines;
+  vector<int> best_move = machines;
   double GE = bestGE;
   int tmp_cl = 0;
 
@@ -248,20 +269,26 @@ vector<int> move_rows(vector<int> &machines, vector<int> &details,
         machines_new[i] = j;
 
         GE = GE_index(machines_new, details, matrix);
-        if (GE > bestGE && all_clusters(machines_new, clusters)) {
-          bestGE = GE;
-          return machines_new;
+        if (GE >= GE_index(best_move, details, matrix) &&
+            all_clusters(machines_new, clusters)) {
+          best_move = machines_new;
+          machines_new[i] = tmp_cl;
+          // return machines_new;
         } else
           machines_new[i] = tmp_cl;
       }
     }
   }
 
-  return machines;
+  if (bestGE < GE_index(best_move, details, matrix)) {
+    bestGE = GE_index(best_move, details, matrix);
+  }
+
+  return best_move;
 }
 
 void LS(vector<int> &machines, vector<int> &details,
-               vector<vector<int>> &matrix, int &clusters) {
+        vector<vector<int>> &matrix, int &clusters) {
   vector<int> machines_new = machines;
   vector<int> details_new = details;
   double cur_GE = bestGE;
@@ -273,7 +300,7 @@ void LS(vector<int> &machines, vector<int> &details,
     while (better_rows) {
       better_rows = false;
       machines_new = move_rows(machines_new, details_new, matrix, clusters);
-     // details_new = move_cols(details_new, machines_new, matrix, clusters);
+      // details_new = move_cols(details_new, machines_new, matrix, clusters);
       if (cur_GE < bestGE) {
         cur_GE = bestGE;
         better_rows = true;
@@ -283,7 +310,6 @@ void LS(vector<int> &machines, vector<int> &details,
     }
 
     while (better_cols) {
-
       better_cols = false;
       details_new = move_cols(details_new, machines_new, matrix, clusters);
       if (cur_GE < bestGE) {
@@ -295,13 +321,9 @@ void LS(vector<int> &machines, vector<int> &details,
     }
   }
 
-  if (all_clusters(machines_new, clusters) && all_clusters(details_new, clusters)) {
-    machines = machines_new;
-    details = details_new;
-    }
-  else {
-      clusters--;
-    }
+
+  machines = machines_new;
+  details = details_new;
 
 
   cout << "LS Answer: ______________________" << endl;
@@ -314,7 +336,7 @@ void LS(vector<int> &machines, vector<int> &details,
   }
   cout << endl;
   cout << GE_index(machines, details, matrix) << endl;
-  cout << "_________________________________" << endl;
+  cout << " ______________________" << endl;
 }
 
 vector<int> rand_sol(vector<int> &for_rand, int clusters) {
@@ -328,8 +350,8 @@ vector<int> rand_sol(vector<int> &for_rand, int clusters) {
 }
 
 std::vector<std::vector<int>> loadData() {
-  ifstream in;                 // поток для записи
-  in.open("../VNS/contest/zolf50.txt"); // окрываем файл для записи
+  ifstream in;             // поток для записи
+  in.open("../chan7.txt"); // окрываем файл для записи
   m = 0;
   p = 0;
   if (!in.is_open()) {

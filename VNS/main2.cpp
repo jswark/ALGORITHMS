@@ -12,7 +12,7 @@ int main() {
   vector<int> details(p);
   machines = rand_sol(machines, clusters);
   details = rand_sol(details, clusters);
-  while(valid_clusters(machines,details,matrix,clusters)==0){
+  while (valid_clusters(machines, details, matrix, clusters) == 0) {
     machines = rand_sol(machines, clusters);
     details = rand_sol(details, clusters);
   }
@@ -40,59 +40,69 @@ int main() {
     cur_best = new_best;
     best_machines = machines;
     best_details = details;
-  }
-  else {
+  } else {
     machines = best_machines;
     details = best_details;
   }
-  while (true) {
-    bool flag = true;
+
+  bool flagbetter = true;
+  while (flagbetter) {
+    flagbetter = false;
+    bool flagsp = true;
+    bool flagme = true;
     vector<int> tmp_machines = best_machines;
     vector<int> tmp_details = best_details;
-    for(int i=0;(i<100) && flag;i++){
+    for (int i = 0; (i < 100) && flagsp; i++) {
       details = tmp_details;
       machines = tmp_machines;
-      split(details,machines,matrix);
+      split(details, machines, matrix);
+      clusters = count_clusters(details, machines);
       LS(machines, details, matrix, clusters);
       new_best = GE_index(machines, details, matrix);
-      if(new_best > cur_best) {
+      if (new_best > cur_best) {
         cur_best = new_best;
         best_machines = machines;
         best_details = details;
-        flag = false;
+        flagsp = false;
+        flagme = true;
+        flagbetter = true;
       }
     }
-    if(flag){
-      for(int i=0;(i<100) && flag;i++){
+
+    tmp_details = best_details;
+    tmp_machines = best_machines;
+    clusters = count_clusters(tmp_details, tmp_machines);
+
+    if (flagme) {
+      for (int i = 0; (i < 100) && flagme && clusters > 2; i++) {
         details = tmp_details;
         machines = tmp_machines;
-        merge(details,machines,matrix);
+        merge(details, machines, matrix);
+        clusters = count_clusters(details, machines);
         LS(machines, details, matrix, clusters);
         new_best = GE_index(machines, details, matrix);
-        if(new_best > cur_best) {
+        if (new_best > cur_best) {
           cur_best = new_best;
           best_machines = machines;
           best_details = details;
-          flag = false;
+          flagme = false;
+          flagbetter = true;
+          flagsp = true;
         }
       }
     }
-    if(flag){
-      break;
-    }
   }
-
   //  (4) print answer
   cout << "Answer:" << endl;
-   for (int i = 0; i < m; i++) {
-     cout << best_machines[i] << ' ';
-   }
-   cout << endl;
-   for (int i = 0; i < p; i++) {
-     cout << best_details[i] << ' ';
-   }
-   cout << endl;
-   cout << GE_index(best_machines, best_details, matrix) << endl;
+  for (int i = 0; i < m; i++) {
+    cout << best_machines[i] << ' ';
+  }
+  cout << endl;
+  for (int i = 0; i < p; i++) {
+    cout << best_details[i] << ' ';
+  }
+  cout << endl;
+  cout << GE_index(best_machines, best_details, matrix) << endl;
 
-   cout << endl;
+  cout << endl;
 }

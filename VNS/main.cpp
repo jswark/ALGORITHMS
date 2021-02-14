@@ -7,7 +7,7 @@ int main() {
   bestGE = 0;
 
   //  (2) generate initial solution
-  int clusters = 8;
+  int clusters = 2;
   vector<int> machines(m);
   vector<int> details(p);
   machines = rand_sol(machines, clusters);
@@ -49,7 +49,7 @@ int main() {
       //clusters--;
     }
 
-    shaking(details, machines, clusters);
+    shaking(details, machines, clusters, matrix);
     counter++;
   }
 
